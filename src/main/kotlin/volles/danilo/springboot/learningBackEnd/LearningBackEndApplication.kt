@@ -8,9 +8,4 @@ class LearningBackEndApplication
 
 fun main(args: Array<String>) {
 	runApplication<LearningBackEndApplication>(*args)
-	helloWorld()
-}
-
-fun helloWorld(): String {
-	return "Olá, mundo!"
 }
