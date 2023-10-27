@@ -11,7 +11,6 @@ group = "volles.danilo.springboot"
 version = "0.0.1-SNAPSHOT"
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_17
 }
 
 repositories {
@@ -24,6 +23,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.10")
 	testImplementation("org.springframework.boot:spring-boot-starter-test:3.1.0")
 	testImplementation("io.mockk:mockk:1.13.8")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks.withType<KotlinCompile> {
@@ -35,4 +35,7 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(17)
 }
