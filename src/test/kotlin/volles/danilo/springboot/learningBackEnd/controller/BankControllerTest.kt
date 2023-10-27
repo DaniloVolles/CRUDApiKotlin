@@ -1,5 +1,6 @@
 package volles.danilo.springboot.learningBackEnd.controller
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import jdk.jfr.ContentType
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
@@ -13,17 +14,21 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
+import volles.danilo.springboot.learningBackEnd.model.Bank
+import javax.print.attribute.standard.Media
 
 @SpringBootTest
 @AutoConfigureMockMvc
-internal class BankControllerTest {
+internal class BankControllerTest @Autowired constructor(
+    val mockMvc: MockMvc,
+    val objectMapper: ObjectMapper
+) {
 
-    @Autowired
-    lateinit var mockMvc: MockMvc
     val baseUrl = "/api/banks"
 
     @Nested
-    @DisplayName("getBanks()")
+    @DisplayName("GET /api/banks")
     @TestInstance(Lifecycle.PER_CLASS)
     inner class GetBanks {
 
@@ -34,18 +39,18 @@ internal class BankControllerTest {
                 .andExpect {
                     status { isOk() }
                     content { contentType(MediaType.APPLICATION_JSON) }
-                    jsonPath("$[0].accountNumber") { value ("1234")}
+                    jsonPath("$[0].accountNumber") { value("1234") }
                 }
         }
     }
 
     @Nested
-    @DisplayName("getBank()")
+    @DisplayName("GET /api/banks/{accountNumber}")
     @TestInstance(Lifecycle.PER_CLASS)
     inner class GetBank {
 
         @Test
-        fun `should return the bank with the given account number`(){
+        fun `should return the bank with the given account number`() {
             val accountNumber = 1234
             mockMvc.get("$baseUrl/$accountNumber")
                 .andDo { print() }
@@ -58,7 +63,7 @@ internal class BankControllerTest {
         }
 
         @Test
-        fun `should return NOT FOUND is the account number does not exist`(){
+        fun `should return NOT FOUND is the account number does not exist`() {
             val accountNumber = "does_not_exist"
             mockMvc.get("$baseUrl/$accountNumber")
                 .andDo { print() }
@@ -66,7 +71,41 @@ internal class BankControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("POST /api/banks")
+    @TestInstance(Lifecycle.PER_CLASS)
+    inner class PostNewBank {
 
+        @Test
+        fun `should add a new bank`() {
+            val newBank = Bank("acc123", 31.415, 2)
+            val performPost = mockMvc.post(baseUrl) {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(newBank)
+            }
+            performPost
+                .andDo { print() }
+                .andExpect {
+                    status { isCreated() }
+                    content { contentType(MediaType.APPLICATION_JSON) }
+                    jsonPath("$.accountNumber") { value("acc123") }
+                    jsonPath("$.trust") { value("31.415") }
+                    jsonPath("$.transactionFee") { value("2") }
+                }
+        }
+
+        @Test
+        fun `should return BAD REQUEST if bank with account number already exists`() {
+            val invalidBank = Bank("1234", 1.0, 1)
+            val performPost = mockMvc.post(baseUrl) {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(invalidBank)
+            }
+            performPost
+                .andDo { print() }
+                .andExpect { status { isBadRequest() } }
+        }
+    }
 
 
 }
